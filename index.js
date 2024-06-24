@@ -22,7 +22,8 @@ function addLaunchButton() {
 
     const launchButton = document.createElement('div');
     launchButton.id = 'inspectNextPromptButton';
-    launchButton.classList.add('list-group-item', 'flex-container', 'flexGap5');
+    launchButton.classList.add('list-group-item', 'flex-container', 'flexGap5', 'interactable');
+    launchButton.tabIndex = 0;
     launchButton.title = 'Toggle prompt inspection';
     const icon = document.createElement('i');
     icon.className = getIcon();
@@ -31,7 +32,9 @@ function addLaunchButton() {
     textSpan.textContent = getText();
     launchButton.appendChild(textSpan);
 
-    const extensionsMenu = document.getElementById('extensionsMenu');
+    const extensionsMenu = document.getElementById('prompt_inspector_wand_container') ?? document.getElementById('extensionsMenu');
+    extensionsMenu.classList.add('interactable');
+    extensionsMenu.tabIndex = 0;
 
     if (!extensionsMenu) {
         throw new Error('Could not find the extensions menu');
