@@ -1,4 +1,6 @@
-const { eventSource, event_types, callPopup, renderExtensionTemplateAsync } = SillyTavern.getContext();
+import { eventSource, event_types, main_api } from '../../../../script.js';
+import { renderExtensionTemplateAsync } from '../../../extensions.js';
+import { POPUP_RESULT, POPUP_TYPE, Popup } from '../../../popup.js';
 
 const path = 'third-party/Extension-PromptInspector';
 
@@ -8,7 +10,7 @@ if (!('GENERATE_AFTER_COMBINE_PROMPTS' in event_types) || !('CHAT_COMPLETION_PRO
 }
 
 function isChatCompletion() {
-    return SillyTavern.getContext().mainApi === 'openai';
+    return main_api === 'openai';
 }
 
 function addLaunchButton() {
@@ -53,7 +55,7 @@ let inspectEnabled = localStorage.getItem('promptInspectorEnabled') === 'true' |
 function toggleInspectNext() {
     inspectEnabled = !inspectEnabled;
     toastr.info(`Prompt inspection is now ${inspectEnabled ? 'enabled' : 'disabled'}`);
-    localStorage.setItem('promptInspectorEnabled', inspectEnabled);
+    localStorage.setItem('promptInspectorEnabled', String(inspectEnabled));
 }
 
 eventSource.on(event_types.CHAT_COMPLETION_PROMPT_READY, async (data) => {
@@ -129,7 +131,18 @@ async function showPromptInspector(input) {
     const template = $(await renderExtensionTemplateAsync(path, 'template'));
     const prompt = template.find('#inspectPrompt');
     prompt.val(input);
-    const result = await callPopup(template, 'confirm', '', { wide: true, large: true, okButton: 'Save', cancelButton: 'Discard' });
+    /** @type {import('../../../popup').CustomPopupButton} */
+    const customButton = {
+        text: 'Cancel generation',
+        result: POPUP_RESULT.CANCELLED,
+        appendAtEnd: true,
+        action: async () => {
+            document.getElementById('mes_stop')?.click();
+            popup.complete(POPUP_RESULT.CANCELLED);
+        },
+    };
+    const popup = new Popup(template, POPUP_TYPE.CONFIRM, '', { wide: true, large: true, okButton: 'Save changes', cancelButton: 'Discard changes', customButtons: [customButton] });
+    const result = await popup.show();
 
     // If the user cancels, return the original input
     if (!result) {
