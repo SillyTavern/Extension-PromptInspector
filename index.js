@@ -1,4 +1,4 @@
-import { eventSource, event_types, main_api } from '../../../../script.js';
+import { eventSource, event_types, main_api, stopGeneration } from '../../../../script.js';
 import { renderExtensionTemplateAsync } from '../../../extensions.js';
 import { POPUP_RESULT, POPUP_TYPE, Popup } from '../../../popup.js';
 
@@ -137,8 +137,8 @@ async function showPromptInspector(input) {
         result: POPUP_RESULT.CANCELLED,
         appendAtEnd: true,
         action: async () => {
-            document.getElementById('mes_stop')?.click();
-            popup.complete(POPUP_RESULT.CANCELLED);
+            await stopGeneration();
+            await popup.complete(POPUP_RESULT.CANCELLED);
         },
     };
     const popup = new Popup(template, POPUP_TYPE.CONFIRM, '', { wide: true, large: true, okButton: 'Save changes', cancelButton: 'Discard changes', customButtons: [customButton] });
