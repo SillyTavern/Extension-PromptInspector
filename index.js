@@ -1,6 +1,7 @@
 import { eventSource, event_types, main_api, stopGeneration } from '../../../../script.js';
 import { renderExtensionTemplateAsync } from '../../../extensions.js';
 import { POPUP_RESULT, POPUP_TYPE, Popup } from '../../../popup.js';
+import { t } from '../../../i18n.js';
 
 const path = 'third-party/Extension-PromptInspector';
 
@@ -14,8 +15,8 @@ function isChatCompletion() {
 }
 
 function addLaunchButton() {
-    const enabledText = 'Stop Inspecting';
-    const disabledText = 'Inspect Prompts';
+    const enabledText = t`Stop Inspecting`;
+    const disabledText = t`Inspect Prompts`;
     const enabledIcon = 'fa-solid fa-bug-slash';
     const disabledIcon = 'fa-solid fa-bug';
 
@@ -26,7 +27,7 @@ function addLaunchButton() {
     launchButton.id = 'inspectNextPromptButton';
     launchButton.classList.add('list-group-item', 'flex-container', 'flexGap5', 'interactable');
     launchButton.tabIndex = 0;
-    launchButton.title = 'Toggle prompt inspection';
+    launchButton.title = t`Toggle prompt inspection`;
     const icon = document.createElement('i');
     icon.className = getIcon();
     launchButton.appendChild(icon);
