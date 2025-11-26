@@ -4,9 +4,9 @@
     "requires": [],
     "optional": [],
     "js": "index.js",
-    "css": "",
+    "css": "style.css",
     "author": "Cohee1207",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "homePage": "https://github.com/SillyTavern/Extension-PromptInspector",
     "auto_update": true
 }

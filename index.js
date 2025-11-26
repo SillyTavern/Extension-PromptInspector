@@ -4,6 +4,7 @@ import { POPUP_RESULT, POPUP_TYPE, Popup } from '../../../popup.js';
 import { t } from '../../../i18n.js';
 
 const path = 'third-party/Extension-PromptInspector';
+const supportsYaml = typeof SillyTavern.libs === 'object' && 'yaml' in SillyTavern.libs;
 
 if (!('GENERATE_AFTER_COMBINE_PROMPTS' in event_types) || !('CHAT_COMPLETION_PROMPT_READY' in event_types)) {
     toastr.error('Required event types not found. Update SillyTavern to the latest version.');
@@ -52,6 +53,7 @@ function addLaunchButton() {
 }
 
 let inspectEnabled = localStorage.getItem('promptInspectorEnabled') === 'true' || false;
+let inspectFormat = localStorage.getItem('promptInspectorFormat') || 'json';
 
 function toggleInspectNext() {
     inspectEnabled = !inspectEnabled;
@@ -123,6 +125,29 @@ eventSource.on(event_types.GENERATE_AFTER_COMBINE_PROMPTS, async (data) => {
     console.debug('Prompt Inspector: Prompt updated');
 });
 
+function jsonToYaml(json) {
+    try {
+        const obj = JSON.parse(json);
+        return SillyTavern.libs.yaml.stringify(obj, { lineWidth: 0 });
+    } catch (e) {
+        console.error('Prompt Inspector: Failed to convert JSON to YAML', e);
+        toastr.error('Failed to convert JSON to YAML');
+        throw e;
+    }
+}
+
+function yamlToJson(yaml) {
+    try {
+        const obj = SillyTavern.libs.yaml.parse(yaml);
+        return JSON.stringify(obj, null, 4);
+    }
+    catch (e) {
+        console.error('Prompt Inspector: Failed to convert YAML to JSON', e);
+        toastr.error('Failed to convert YAML to JSON');
+        throw e;
+    }
+}
+
 /**
  * Shows a prompt inspector popup.
  * @param {string} input Initial prompt JSON
@@ -131,7 +156,19 @@ eventSource.on(event_types.GENERATE_AFTER_COMBINE_PROMPTS, async (data) => {
 async function showPromptInspector(input) {
     const template = $(await renderExtensionTemplateAsync(path, 'template'));
     const prompt = template.find('#inspectPrompt');
-    prompt.val(input);
+    prompt.val(supportsYaml && inspectFormat === 'yaml' ? jsonToYaml(input) : input);
+
+    const formatSelect = template.find('#inspectPromptFormat');
+    formatSelect.val(inspectFormat);
+    formatSelect.toggle(supportsYaml && isChatCompletion());
+    formatSelect.on('change', () => {
+        inspectFormat = formatSelect.val();
+        localStorage.setItem('promptInspectorFormat', inspectFormat);
+        // Switch the content in the textarea
+        const currentValue = prompt.val();
+        prompt.val(inspectFormat === 'yaml' ? jsonToYaml(currentValue) : yamlToJson(currentValue));
+    });
+
     /** @type {import('../../../popup').CustomPopupButton} */
     const customButton = {
         text: 'Cancel generation',
@@ -150,7 +187,12 @@ async function showPromptInspector(input) {
         return input;
     }
 
-    return String(prompt.val());
+    const output = prompt.val();
+    if (supportsYaml && inspectFormat === 'yaml') {
+        return String(yamlToJson(output));
+    }
+
+    return String(output);
 }
 
 (function init() {
