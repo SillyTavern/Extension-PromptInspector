@@ -156,7 +156,7 @@ function yamlToJson(yaml) {
 async function showPromptInspector(input) {
     const template = $(await renderExtensionTemplateAsync(path, 'template'));
     const prompt = template.find('#inspectPrompt');
-    prompt.val(supportsYaml && inspectFormat === 'yaml' ? jsonToYaml(input) : input);
+    prompt.val(supportsYaml && isChatCompletion() && inspectFormat === 'yaml' ? jsonToYaml(input) : input);
 
     const formatSelect = template.find('#inspectPromptFormat');
     formatSelect.val(inspectFormat);
@@ -188,7 +188,7 @@ async function showPromptInspector(input) {
     }
 
     const output = prompt.val();
-    if (supportsYaml && inspectFormat === 'yaml') {
+    if (supportsYaml && isChatCompletion() && inspectFormat === 'yaml') {
         return String(yamlToJson(output));
     }
 
